@@ -1,3 +1,34 @@
+// Hàm hiển thị thông báo tạm thời
+function showToast(message, duration = 2000) {
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.backgroundColor = '#333';
+    toast.style.color = 'white';
+    toast.style.padding = '10px 20px';
+    toast.style.borderRadius = '4px';
+    toast.style.zIndex = '1000';
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    
+    document.body.appendChild(toast);
+    
+    // Trigger reflow
+    toast.offsetHeight;
+    
+    toast.style.opacity = '1';
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(toast);
+        }, 300);
+    }, duration);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const formGenerate = document.getElementById('form-generate-qr');
     const canvas = document.getElementById('qr-canvas');
@@ -9,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formScan = document.getElementById('form-scan-qr');
     const inputQRFile = document.getElementById('input-qr-file');
-    const outputText = document.getElementById('output-text');
 
     // Clear canvas helper
     function clearCanvas() {
@@ -86,6 +116,69 @@ document.addEventListener('DOMContentLoaded', () => {
         generateQRCode(text, size, color, logoFile);
     });
 
+    // Sao chép văn bản từ textarea
+    const copyTextBtn = document.getElementById('copy-text-btn');
+    const outputText = document.getElementById('output-text');
+    
+    copyTextBtn.addEventListener('click', async () => {
+        if (!outputText.value.trim()) {
+            showToast('Không có nội dung để sao chép');
+            return;
+        }
+        
+        try {
+            await navigator.clipboard.writeText(outputText.value);
+            copyTextBtn.classList.add('copied');
+            copyTextBtn.innerHTML = '<span class="copy-icon">✓</span><span class="copy-text">Đã sao chép</span>';
+            showToast('Đã sao chép vào clipboard');
+            
+            setTimeout(() => {
+                copyTextBtn.classList.remove('copied');
+                copyTextBtn.innerHTML = '<span class="copy-icon">📋</span><span class="copy-text">Sao chép</span>';
+            }, 2000);
+        } catch (err) {
+            console.error('Lỗi khi sao chép: ', err);
+            showToast('Lỗi khi sao chép');
+        }
+    });
+    
+    // Sao chép ảnh QR
+    const copyQrBtn = document.getElementById('copy-qr-btn');
+    const qrCanvas = document.getElementById('qr-canvas');
+    
+    copyQrBtn.addEventListener('click', async () => {
+        if (qrCanvas.width === 0 || qrCanvas.height === 0) {
+            showToast('Không có mã QR để sao chép');
+            return;
+        }
+        
+        try {
+            // Chuyển canvas thành blob
+            qrCanvas.toBlob(async (blob) => {
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    
+                    copyQrBtn.classList.add('copied');
+                    copyQrBtn.innerHTML = '<span class="copy-icon">✓</span><span class="copy-text">Đã sao chép</span>';
+                    showToast('Đã sao chép ảnh QR vào clipboard');
+                    
+                    setTimeout(() => {
+                        copyQrBtn.classList.remove('copied');
+                        copyQrBtn.innerHTML = '<span class="copy-icon">📋</span><span class="copy-text">Sao chép</span>';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Lỗi khi sao chép ảnh: ', err);
+                    showToast('Lỗi khi sao chép ảnh');
+                }
+            }, 'image/png');
+        } catch (err) {
+            console.error('Lỗi khi tạo ảnh: ', err);
+            showToast('Lỗi khi tạo ảnh để sao chép');
+        }
+    });
+    
     // QR code scanning from image file
     formScan.addEventListener('submit', e => {
         e.preventDefault();
