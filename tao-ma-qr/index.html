@@ -7,9 +7,9 @@
     <meta name="description"
         content="Trang web tạo và quét mã QR từ văn bản. Chuyển đổi Text sang QR Code và ngược lại với nhiều tùy chọn, responsive và thân thiện người dùng." />
     <meta name="keywords"
-        content="QR Code, tạo mã QR, quét mã QR, chuyển đổi text sang QR, chuyển QR sang text, responsive, PWA" />
+        content="QR Code, tạo mã QR, quét mã QR, chuyển đổi text sang QR, chuyển QR sang text, responsive, qrcode online" />
     <meta name="author" content="nquan" />
-    <title>QR Code Generator and Scanner</title>
+    <title>QR Code Generator and Scanner online</title>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -98,11 +98,28 @@
         <section aria-labelledby="section-scan-qr">
             <h2 id="section-scan-qr">Quét mã QR thành Text</h2>
             <form id="form-scan-qr" aria-describedby="desc-scan-qr">
-                <p id="desc-scan-qr">Tải lên ảnh chứa mã QR để giải mã và chuyển thành văn bản.</p>
-                <label for="input-qr-file">Chọn ảnh mã QR:</label>
-                <input type="file" id="input-qr-file" name="input-qr-file" accept="image/*" required
-                    aria-required="true" />
-                <button type="submit" aria-label="Quét mã QR từ ảnh">Quét mã QR</button>
+                <b id="desc-scan-qr">Ấn (Ctrl+V) để dán ảnh hoặc chọn file để quét mã QR.</b>
+                
+                <div id="drop-zone" class="drop-zone">
+                    <div class="drop-zone-content">
+                        <div class="drop-zone-icon">📁</div>
+                        <div class="drop-zone-text">Kéo thả ảnh vào đây hoặc nhấn để chọn file</div>
+                        <div class="drop-zone-or">hoặc</div>
+                        <div class="drop-zone-paste">Dán ảnh (Ctrl+V)</div>
+                        <input type="file" id="input-qr-file" name="input-qr-file" accept="image/*" class="drop-zone-input" />
+                    </div>
+                </div>
+                
+                <div class="file-info" id="file-info"></div>
+                <div id="image-preview-container" class="image-preview-container" style="display: none;">
+                    <div class="image-preview-wrapper">
+                        <img id="image-preview" src="#" alt="Preview of selected image" class="image-preview" />
+                        <button type="button" id="remove-image" class="remove-image-btn" title="Xoá ảnh">
+                            <span class="remove-icon">✕</span>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="scan-button" aria-label="Quét mã QR từ ảnh">Quét mã QR</button>
             </form>
             <label for="output-text">Kết quả văn bản:</label>
             <div class="text-copy-container">

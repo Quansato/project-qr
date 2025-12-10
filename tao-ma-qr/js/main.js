@@ -29,6 +29,57 @@ function showToast(message, duration = 2000) {
     }, duration);
 }
 
+// Hàm hiển thị preview ảnh
+function showImagePreview(file) {
+    const reader = new FileReader();
+    const previewImg = document.getElementById('image-preview');
+    const previewContainer = document.getElementById('image-preview-container');
+    
+    reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        previewContainer.style.display = 'block';
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Hàm xoá ảnh preview
+function removeImagePreview() {
+    const previewContainer = document.getElementById('image-preview-container');
+    const fileInput = document.getElementById('input-qr-file');
+    const fileInfo = document.getElementById('file-info');
+    
+    // Reset file input
+    fileInput.value = '';
+    
+    // Hide preview
+    previewContainer.style.display = 'none';
+    
+    // Clear file info
+    fileInfo.textContent = '';
+    fileInfo.style.display = 'none';
+}
+
+// Hàm xử lý khi chọn file ảnh
+function handleImageFile(file) {
+    const fileInfo = document.getElementById('file-info');
+    
+    if (!file.type.startsWith('image/')) {
+        fileInfo.textContent = 'Vui lòng chọn file ảnh hợp lệ';
+        fileInfo.style.display = 'block';
+        fileInfo.style.color = 'red';
+        return false;
+    }
+    
+    fileInfo.textContent = `Đã chọn: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+    fileInfo.style.display = 'block';
+    fileInfo.style.color = 'inherit';
+    
+    // Hiển thị preview ảnh
+    showImagePreview(file);
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const formGenerate = document.getElementById('form-generate-qr');
     const canvas = document.getElementById('qr-canvas');
@@ -40,6 +91,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formScan = document.getElementById('form-scan-qr');
     const inputQRFile = document.getElementById('input-qr-file');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInfo = document.getElementById('file-info');
+
+    // Xử lý kéo thả file
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropZone.classList.add('drag-over');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('drag-over');
+    }
+
+    // Xử lý thả file
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            inputQRFile.files = files;
+            handleImageFile(files[0]);
+        }
+    }
+
+    // Xử lý click vào drop zone để chọn file
+    dropZone.addEventListener('click', () => {
+        inputQRFile.click();
+    });
+
+    // Xử lý chọn file
+    inputQRFile.addEventListener('change', (e) => {
+        if (inputQRFile.files.length > 0) {
+            handleImageFile(inputQRFile.files[0]);
+        }
+    });
+
+    // Xử lý dán ảnh (Ctrl+V)
+    document.addEventListener('paste', (e) => {
+        const items = (e.clipboardData || window.clipboardData).items;
+        
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(blob);
+                inputQRFile.files = dataTransfer.files;
+                
+                // Cập nhật thông tin file và hiển thị preview
+                fileInfo.textContent = 'Đã dán ảnh từ clipboard';
+                fileInfo.style.display = 'block';
+                fileInfo.style.color = 'inherit';
+                
+                // Hiển thị preview ảnh
+                showImagePreview(blob);
+                
+                break;
+            }
+        }
+    });
+    
+    // Xử lý sự kiện click nút xoá ảnh
+    document.getElementById('remove-image').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        removeImagePreview();
+    });
+    
+    // Xử lý khi form được submit
+    formScan.addEventListener('submit', (e) => {
+        if (!inputQRFile.files || inputQRFile.files.length === 0) {
+            e.preventDefault();
+            showToast('Vui lòng chọn hoặc dán ảnh để quét mã QR');
+            return false;
+        }
+        return true;
+    });
 
     // Clear canvas helper
     function clearCanvas() {
@@ -185,13 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
         outputText.value = '';
         const file = inputQRFile.files[0];
         if (!file) {
-            alert('Vui lòng chọn ảnh chứa mã QR để quét.');
-            inputQRFile.focus();
+            showToast('Vui lòng chọn hoặc dán ảnh chứa mã QR để quét.');
+            dropZone.focus();
             return;
         }
         if (!file.type.startsWith('image/')) {
-            alert('File chọn phải là ảnh.');
-            inputQRFile.focus();
+            showToast('File chọn phải là ảnh.');
             return;
         }
 
