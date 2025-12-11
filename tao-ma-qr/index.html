@@ -46,6 +46,7 @@
     <link rel="icon" type="image/png" href="./resource/repair_956125.png" sizes="32x32">
     <link rel="apple-touch-icon" href="./resource/repair_956125.png">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -54,80 +55,112 @@
         <p>Tạo và quét mã QR từ văn bản - Chuyển đổi Text QR Code</p>
     </header>
 
-    <main>
-        <section aria-labelledby="section-generate-qr">
-            <h2 id="section-generate-qr">Tạo mã QR từ Text</h2>
-            <form id="form-generate-qr" aria-describedby="desc-generate-qr">
-                <p id="desc-generate-qr">Nhập văn bản bạn muốn chuyển thành mã QR. Tùy chỉnh kích thước, màu sắc và logo
-                    nếu muốn.</p>
-                <label for="input-text">Văn bản (Text):</label>
-                <textarea id="input-text" name="input-text" rows="4" required aria-required="true"
-                    placeholder="Nhập văn bản tại đây..."></textarea>
+    <main class="main-container">
+        <div class="sections-container">
+            <section class="qr-section" aria-labelledby="section-generate-qr">
+                <h2 id="section-generate-qr">Tạo mã QR từ Text</h2>
+                <form id="form-generate-qr" aria-describedby="desc-generate-qr">
+                    <p id="desc-generate-qr">Nhập văn bản bạn muốn chuyển thành mã QR. Tùy chỉnh kích thước, màu sắc và logo
+                        nếu muốn.</p>
+                    <label for="input-text">Văn bản (Text):</label>
+                    <textarea id="input-text" name="input-text" rows="4" required aria-required="true"
+                        placeholder="Nhập văn bản tại đây..."></textarea>
 
-                <div class="flex-row">
-                    <div class="flex-grow">
-                        <label for="input-size">Kích thước QR (px):</label>
-                        <input type="number" id="input-size" name="input-size" min="100" max="1000" value="250"
-                            aria-describedby="size-help" />
-                        <small id="size-help">Từ 100 đến 1000 px</small>
+                    <div class="flex-row">
+                        <div class="flex-grow">
+                            <label for="input-size">Kích thước QR (px):</label>
+                            <input type="number" id="input-size" name="input-size" min="100" max="1000" value="250"
+                                aria-describedby="size-help" />
+                            <small id="size-help">Từ 100 đến 1000 px</small>
+                        </div>
+                        <div class="flex-grow">
+                            <label for="input-color">Màu QR:</label>
+                            <input type="color" id="input-color" name="input-color" value="#000000"
+                                aria-describedby="color-help" />
+                            <small id="color-help">Chọn màu cho mã QR</small>
+                        </div>
                     </div>
-                    <div class="flex-grow">
-                        <label for="input-color">Màu QR:</label>
-                        <input type="color" id="input-color" name="input-color" value="#000000"
-                            aria-describedby="color-help" />
-                        <small id="color-help">Chọn màu cho mã QR</small>
-                    </div>
+
+                    <label for="input-logo">Logo (tùy chọn):</label>
+                    <input type="file" id="input-logo" name="input-logo" accept="image/*" aria-describedby="logo-help" />
+                    <small id="logo-help">Chọn file ảnh logo để chèn vào giữa mã QR (tối đa 100x100 px)</small>
+
+                    <button type="submit" aria-label="Tạo mã QR từ văn bản">Tạo mã QR</button>
+                </form>
+                <div class="qr-container" aria-live="polite" aria-atomic="true" aria-relevant="additions"
+                    aria-label="Kết quả mã QR">
+                    <canvas id="qr-canvas" role="img" aria-hidden="true"></canvas>
+                    <button class="qr-copy-btn" id="copy-qr-btn" title="Sao chép ảnh QR">
+                        <span class="copy-icon">📋</span>
+                        <span class="copy-text">Sao chép ảnh QR</span>
+                    </button>
                 </div>
+            </section>
 
-                <label for="input-logo">Logo (tùy chọn):</label>
-                <input type="file" id="input-logo" name="input-logo" accept="image/*" aria-describedby="logo-help" />
-                <small id="logo-help">Chọn file ảnh logo để chèn vào giữa mã QR (tối đa 100x100 px)</small>
+            <section class="qr-section" aria-labelledby="section-scan-qr">
+                <h2 id="section-scan-qr">Quét mã QR thành Text</h2>
+                <form id="form-scan-qr" aria-describedby="desc-scan-qr">
+                    <b id="desc-scan-qr">Ấn (Ctrl+V) để dán ảnh hoặc chọn file để quét mã QR.</b>
+                    
+                    <div id="drop-zone" class="drop-zone">
+                        <div class="drop-zone-content">
+                            <div class="drop-zone-icon">📁</div>
+                            <div class="drop-zone-text">Kéo thả ảnh vào đây hoặc nhấn để chọn file</div>
+                            <div class="drop-zone-or">hoặc</div>
+                            <div class="drop-zone-paste">Dán ảnh (Ctrl+V)</div>
+                            <input type="file" id="input-qr-file" name="input-qr-file" accept="image/*" class="drop-zone-input" />
+                        </div>
+                    </div>
+                    
+                    <div class="file-info" id="file-info"></div>
+                    <div id="image-preview-container" class="image-preview-container" style="display: none;">
+                        <div class="image-preview-wrapper">
+                            <img id="image-preview" src="#" alt="Preview of selected image" class="image-preview" />
+                            <button type="button" id="remove-image" class="remove-image-btn" title="Xoá ảnh">
+                                <span class="remove-icon">✕</span>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="scan-button" aria-label="Quét mã QR từ ảnh">Quét mã QR</button>
+                </form>
+                <label for="output-text">Kết quả văn bản:</label>
+                <div class="text-copy-container">
+                    <textarea id="output-text" class="result-textarea" readonly aria-label="Văn bản giải mã từ mã QR"></textarea>
+                    <button class="copy-btn" id="copy-text-btn" title="Sao chép văn bản">
+                        <span class="copy-icon">📋</span>
+                        <span class="copy-text">Sao chép văn bản</span>
+                    </button>
+                </div>
+            </section>
+        </div>
 
-                <button type="submit" aria-label="Tạo mã QR từ văn bản">Tạo mã QR</button>
-            </form>
-            <div class="qr-container" aria-live="polite" aria-atomic="true" aria-relevant="additions"
-                aria-label="Kết quả mã QR">
-                <canvas id="qr-canvas" role="img" aria-hidden="true"></canvas>
-                <button class="qr-copy-btn" id="copy-qr-btn" title="Sao chép ảnh QR">
-                    <span class="copy-icon">📋</span>
-                    <span class="copy-text">Sao chép ảnh QR</span>
-                </button>
-            </div>
-        </section>
-
-        <section aria-labelledby="section-scan-qr">
-            <h2 id="section-scan-qr">Quét mã QR thành Text</h2>
-            <form id="form-scan-qr" aria-describedby="desc-scan-qr">
-                <b id="desc-scan-qr">Ấn (Ctrl+V) để dán ảnh hoặc chọn file để quét mã QR.</b>
+        <section class="faq-section" aria-labelledby="section-faq">
+            <h2 id="section-faq">Câu hỏi thường gặp (FAQ)</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <h3>Mã QR là gì?</h3>
+                    <p>Mã QR (Quick Response) là một mã vạch hai chiều có thể lưu trữ thông tin dưới dạng văn bản, URL, thông tin liên hệ, vị trí địa lý và nhiều hơn nữa. Mã QR có thể được quét bằng điện thoại thông minh hoặc máy quét mã QR.</p>
+                </div>
                 
-                <div id="drop-zone" class="drop-zone">
-                    <div class="drop-zone-content">
-                        <div class="drop-zone-icon">📁</div>
-                        <div class="drop-zone-text">Kéo thả ảnh vào đây hoặc nhấn để chọn file</div>
-                        <div class="drop-zone-or">hoặc</div>
-                        <div class="drop-zone-paste">Dán ảnh (Ctrl+V)</div>
-                        <input type="file" id="input-qr-file" name="input-qr-file" accept="image/*" class="drop-zone-input" />
-                    </div>
+                <div class="faq-item">
+                    <h3>Tôi có thể tạo mã QR miễn phí không?</h3>
+                    <p>Có, công cụ tạo mã QR của chúng tôi hoàn toàn miễn phí. Bạn có thể tạo bao nhiêu mã QR tùy thích mà không cần trả phí.</p>
                 </div>
                 
-                <div class="file-info" id="file-info"></div>
-                <div id="image-preview-container" class="image-preview-container" style="display: none;">
-                    <div class="image-preview-wrapper">
-                        <img id="image-preview" src="#" alt="Preview of selected image" class="image-preview" />
-                        <button type="button" id="remove-image" class="remove-image-btn" title="Xoá ảnh">
-                            <span class="remove-icon">✕</span>
-                        </button>
-                    </div>
+                <div class="faq-item">
+                    <h3>Mã QR của tôi có hết hạn không?</h3>
+                    <p>Mã QR được tạo ra từ trang web này không bao giờ hết hạn. Tuy nhiên, nếu nó trỏ đến một URL và URL đó bị xóa hoặc thay đổi, mã QR sẽ không còn hoạt động nữa.</p>
                 </div>
-                <button type="submit" class="scan-button" aria-label="Quét mã QR từ ảnh">Quét mã QR</button>
-            </form>
-            <label for="output-text">Kết quả văn bản:</label>
-            <div class="text-copy-container">
-                <textarea id="output-text" class="result-textarea" readonly aria-label="Văn bản giải mã từ mã QR"></textarea>
-                <button class="copy-btn" id="copy-text-btn" title="Sao chép văn bản">
-                    <span class="copy-icon">📋</span>
-                    <span class="copy-text">Sao chép văn bản</span>
-                </button>
+                
+                <div class="faq-item">
+                    <h3>Tôi có thể tùy chỉnh màu sắc của mã QR không?</h3>
+                    <p>Có, bạn có thể tùy chỉnh màu sắc của mã QR bằng cách sử dụng bảng chọn màu trong phần tạo mã QR.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3>Làm cách nào để quét mã QR?</h3>
+                    <p>Bạn có thể sử dụng ứng dụng máy ảnh trên điện thoại thông minh hoặc tải ứng dụng quét mã QR từ cửa hàng ứng dụng. Nhiều điện thoại thông minh hiện đại đã tích hợp sẵn tính năng quét mã QR trong ứng dụng máy ảnh.</p>
+                </div>
             </div>
         </section>
     </main>
